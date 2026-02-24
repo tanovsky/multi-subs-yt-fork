@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Popup Mock</title>
+  <style>
+    body { margin:0; font-family: Arial, Helvetica, sans-serif; }
+    .popup { width:320px; padding:12px; box-sizing:border-box; }
+    h3 { text-align:center; margin:6px 0; }
+    #div_connecting_tip { color: orange; margin-bottom:8px; }
+    #div_refresh_tip { color: red; text-align:center; display:none; margin-bottom:8px; }
+    #div_page_title { margin:4px 0 8px; font-size:14px; }
+    #div_message { min-height:18px; color:#333; margin-bottom:8px; }
+    .row { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    select, button { padding:6px; }
+    select { flex:1; }
+    button { flex:1; }
+    #controls { display:flex; gap:8px; justify-content:space-between; }
+    footer { text-align:center; font-size:12px; color:#666; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="popup" id="popup-root">
+    <h3>Multi Subtitles Youtube</h3>
+    <div id="div_connecting_tip">Still trying to get web video player info ...</div>
+    <div id="div_refresh_tip">Refresh the web if subtitles not loaded or loaded wrong</div>
+    <h4 id="div_page_title">Test Video - Multi Subtitles Extension</h4>
+    <div id="div_message"></div>
+
+    <div class="row">
+      <select id="selector-sub-lang">
+        <option value="0">English</option>
+        <option value="1">Spanish</option>
+      </select>
+      <label style="display:flex;align-items:center;gap:6px;"> 
+        <input id="cbox_trans" type="checkbox"/> translate to
+      </label>
+    </div>
+
+    <select id="selector-trans-lang" disabled style="width:100%;padding:6px;margin-bottom:10px;">
+      <option value="0">Spanish</option>
+      <option value="1">French</option>
+    </select>
+
+    <div id="controls">
+      <button id="btn_disp_sub">Add Subtitle</button>
+      <button id="btn_rm_sub">Remove All</button>
+      <button id="btn_url">Copy URL</button>
+    </div>
+
+    <footer>More addons / Donate: Visit Author</footer>
+  </div>
+  <script>
+    // Small script to toggle connecting tip after a short delay
+    setTimeout(()=>{
+      document.getElementById('div_connecting_tip').style.display='none';
+    }, 800);
+  </script>
+</body>
+</html>

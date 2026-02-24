@@ -1,0 +1,13 @@
+{
+  "name": "multi-subs-yt Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-playwright.playwright"
+      ]
+    }
+  },
+  "postCreateCommand": "npx playwright install-deps && npm install && npx playwright install",
+  "remoteUser": "vscode"
+}

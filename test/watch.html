@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Watch Page</title>
+</head>
+<body>
+  <script>
+    // Minimal mock of player response the extension looks for
+    var ytInitialPlayerResponse = {
+      videoDetails: { 
+        videoId: "TEST_VIDEO_ID", 
+        title: "Test Video - Multi Subtitles Extension" 
+      },
+      captions: { 
+        playerCaptionsTracklistRenderer: { 
+          captionTracks: [
+            { 
+              vssId: 'en', 
+              baseUrl: 'data:text/vtt;base64,V0VCVlRUCgAwMDowMDowMC4wMDAgLS0+IDAwOjAwOjAzLjAwMApUZXN0IHN1YnRpdGxlIDEKCjAwOjAwOjAzLjAwMCAtLT4gMDA6MDA6MDYuMDAwClRlc3Qgc3VidGl0bGUgMgoK', 
+              name: { simpleText: 'English' },
+              isTranslatable: true
+            },
+            { 
+              vssId: 'es', 
+              baseUrl: 'data:text/vtt;base64,V0VCVlRUCgAwMDowMDowMC4wMDAgLS0+IDAwOjAwOjAzLjAwMApTdWLDrXR1bG8gZGUgcHJ1ZWJhIDEKCjAwOjAwOjAzLjAwMCAtLT4gMDA6MDA6MDYuMDAwClN1YsOtdHVsbyBkZSBwcnVlYmEgMgoK', 
+              name: { simpleText: 'Spanish' },
+              isTranslatable: true
+            }
+          ], 
+          translationLanguages: [
+            { languageCode: 'es', languageName: { simpleText: 'Spanish' } },
+            { languageCode: 'fr', languageName: { simpleText: 'French' } },
+            { languageCode: 'de', languageName: { simpleText: 'German' } }
+          ] 
+        }
+      }
+      };
+      // Expose the mock player response on the page body so the content script can read it during testing
+      try {
+        document.body.setAttribute('data-playerResponse', JSON.stringify(ytInitialPlayerResponse));
+      } catch (e) {}
+  </script>
+
+  <h1>😊 Multi Subtitles YouTube - Test Page</h1>
+  <p><strong>Testing the extension locally without YouTube</strong></p>
+  
+  <video controls style="width:640px;height:360px;">
+    <source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">
+    Your browser does not support the video tag.
+  </video>
+
+  <p style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 5px;">
+    <strong>How to test:</strong><br>
+    1. Open the extension popup (click the extension icon)<br>
+    2. You should see subtitle options in the dropdown<br>
+    3. Click "Add Subtitle" to test<br>
+    4. Click "Remove All" to remove subtitles<br>
+    5. Try the "Copy URL" button
+  </p>
+</body>
+</html>

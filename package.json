@@ -1,0 +1,11 @@
+{
+  "name": "multi-subs-yt-test",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "test:playwright": "node tests/playwright-run.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.38.0"
+  }
+}

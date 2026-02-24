@@ -27,7 +27,7 @@
         {
             "matches": ["*://www.youtube.com/watch*"],
             "js": ["inject.js"],
-            "run_at": "document_idle"
+            "run_at": "document_end"
         }
     ],
     "browser_specific_settings": {

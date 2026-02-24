@@ -49,14 +49,7 @@ onrd.push(async function(){
     //console.log (cur_tab.id, cur_tab.title );
     //document.getElementById("div_page_title").textContent = cur_tab.title;
     
-    // Trigger content script to send player response
-    try {
-        await chrome.tabs.sendMessage(cur_tab.id, { action: "get_player_info" });
-    } catch (err) {
-        console.log("Could not send message to tab:", err);
-    }
-    
-    // Listen for messages from content script
+    // Set up listener FIRST before sending messages
     chrome.runtime.onMessage.addListener(async function(message, sender) { 
         // 
         // console.log("popup receive message", message, sender);
@@ -105,6 +98,13 @@ onrd.push(async function(){
             parse_ytplayer();
         
     });
+    
+    // NOW trigger content script to send player response
+    try {
+        await chrome.tabs.sendMessage(cur_tab.id, { action: "get_player_info" });
+    } catch (err) {
+        console.log("Could not send message to tab:", err);
+    }
     
 });
 

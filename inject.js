@@ -20,6 +20,13 @@ if ( ! window.has_executed )
 function first_run() {
     chrome.runtime.onMessage.addListener( async function(message, sender) {
         //console.log(message, sender);
+        
+        // Handle request for player info from popup
+        if (message.action === "get_player_info") {
+            send_ytplayer();
+            return;
+        }
+        
         if ( message.action == "display_sub" )
         {
             var url = message.url;
@@ -75,23 +82,39 @@ function remove_subs() {
         ele.parentNode.removeChild(ele);
     });
 }
-async function send_ytplayer() 
+async function send_ytplayer(retries = 3) 
 {
     
     //console.log(document.title);
     try {
+        // Add delay to ensure page is fully loaded
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         get_ytplayer_to_body();
         
         const playerResponse_json = document.body.getAttribute('data-playerResponse');
         //console.log( playerResponse_json );
         
-        chrome.runtime.sendMessage({
-            //tabid: window.tabid,
-            title: document.title,
-            href: window.location.href,
-            playerResponse_json: playerResponse_json,
-        });
-    }catch(err) {}
+        if (playerResponse_json) {
+            chrome.runtime.sendMessage({
+                //tabid: window.tabid,
+                title: document.title,
+                href: window.location.href,
+                playerResponse_json: playerResponse_json,
+            }).catch(err => console.error("Error sending:", err));
+        } else if (retries > 0) {
+            // Retry if data not available
+            console.log("Player response not found, retrying...", retries);
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await send_ytplayer(retries - 1);
+        }
+    }catch(err) {
+        console.error("Error in send_ytplayer:", err);
+        if (retries > 0) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            await send_ytplayer(retries - 1);
+        }
+    }
     
     remove_page_change();
 

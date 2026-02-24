@@ -5,10 +5,22 @@
  * Background service worker for Manifest V3
  */
 
-// Listen for messages from popup and inject.js
+// Store playerResponse per tab
+const playerResponses = {};
+
+// Listen for all messages and relay appropriately
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    // Just relay messages between popup and content script
+    const tabId = sender.tab.id;
+    
+    // Store player response from content script
+    if (message.playerResponse_json) {
+        playerResponses[tabId] = message;
+    }
+    
+    // Relay messages between popup and content script
     if (message.action === "display_sub" || message.action === "remove_subs") {
-        chrome.tabs.sendMessage(sender.tab.id, message);
+        chrome.tabs.sendMessage(tabId, message).catch(err => {
+            console.error("Error sending message:", err);
+        });
     }
 });

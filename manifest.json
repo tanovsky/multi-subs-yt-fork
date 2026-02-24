@@ -2,14 +2,14 @@
     "name": "Multi Subsitles Youtube",
     "description": "Display as many subtitles as you like. Different languages, translated, auto-generated. NO dependency on third-party server",
     "manifest_version": 3,
-    "version": "0.9.5",
-    "homepage_url": "https://garywill.github.io",
+    "version": "0.0.1",
+    "homepage_url": "https://tanovsky.github.io",
     "permissions": [
         "storage",
         "tabs"
     ],
     "host_permissions": [
-        "*://www.youtube.com/*"
+        "https://www.youtube.com/*"
     ],
     "action": {
         "default_title": "Multi Subsitles Youtube",
@@ -26,9 +26,9 @@
     },
     "content_scripts": [
         {
-            "matches": ["https://www.youtube.com/watch*"],
+            "matches": ["https://www.youtube.com/watch*", "http://localhost/*", "http://127.0.0.1/*"],
             "js": ["inject.js"],
-            "run_at": "document_end"
+            "run_at": "document_start"
         }
     ],
     "browser_specific_settings": {

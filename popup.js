@@ -32,7 +32,7 @@ onrd.push(async function(){
     //console.log (cur_tab.id, cur_tab.title );
     //document.getElementById("div_page_title").textContent = cur_tab.title;
     
-    // Content script is already injected via manifest.json, no need to execute it manually
+    // Content script is already injected via manifest.json
     
     chrome.runtime.onMessage.addListener(async function(message, sender) { 
         // 

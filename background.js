@@ -11,4 +11,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "display_sub" || message.action === "remove_subs") {
         chrome.tabs.sendMessage(sender.tab.id, message);
     }
-}); 
+});

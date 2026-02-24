@@ -12,12 +12,12 @@
         "storage"
     ],
     "host_permissions": [
-        "*://www.youtube.com/watch*"
+        "*://www.youtube.com/*"
     ],
     "action": {
         "default_title": "Multi Subsitles Youtube",
         "default_popup": "popup.html",
-        "default_icons": {
+        "default_icon": {
             "128": "icon.png"
         }
     },

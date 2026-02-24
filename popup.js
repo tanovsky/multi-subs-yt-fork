@@ -24,9 +24,10 @@ var playerResponse;
 var captionTracks;
 var translationLanguages;
 
-// Safely send a message to a tab and return true on success.
+// Safely send a message through background service worker to content script
 async function safeSendMessage(tabId, message) {
     try {
+        // Use chrome.tabs.sendMessage to send directly to content script
         const res = await chrome.tabs.sendMessage(tabId, message);
         return true;
     } catch (err) {
@@ -46,64 +47,61 @@ onrd.push(async function(){
         currentWindow: true, active: true
     }) ) [0];
 
+    if (!cur_tab) {
+        const divMsg = document.getElementById('div_message');
+        if (divMsg) {
+            divMsg.textContent = 'No active tab found';
+            divMsg.style.color = 'red';
+        }
+        return;
+    }
+
     //console.log (cur_tab.id, cur_tab.title );
     //document.getElementById("div_page_title").textContent = cur_tab.title;
     
-    // Set up listener FIRST before sending messages
+    // Set up listener to receive messages from content script (relayed by background)
     chrome.runtime.onMessage.addListener(async function(message, sender) { 
         // 
         // console.log("popup receive message", message, sender);
-        // console.log(message);
         
-        if (!sender || !sender.tab || sender.tab.id !== cur_tab.id) {
-            return;
-        }
-
-        playerResponse = null;
-            //console.log("tab id matches");
-            //document.getElementById("div_page_title").textContent = message['title'];
-            //ytplayer = JSON.parse(message['ytplayer_json']);
-            if (message && message.playerResponse_json) {
-                try {
-                    playerResponse = JSON.parse(message.playerResponse_json);
-                } catch (err) {
-                    console.error('Failed to parse playerResponse_json', err);
+        if (message && message.playerResponse_json) {
+            try {
+                playerResponse = JSON.parse(message.playerResponse_json);
+                
+                document.getElementById("div_connecting_tip").style.display="none";
+                
+                if (playerResponse === null || playerResponse === undefined )
+                {
                     show_refresh();
                     return;
                 }
-            } else {
-                show_refresh();
-                return;
-            }
-            
-            document.getElementById("div_connecting_tip").style.display="none";
-            
-            //console.log(ytplayer);
-            //console.log(ytplayer.config);
-            if (playerResponse === null || playerResponse === undefined )
-            {
-                show_refresh();
-                return;
-            }
-            
-            //const player_response = ytplayer.config.args.raw_player_response;
-            
-            var ytplayer_videoid = playerResponse && playerResponse.videoDetails && playerResponse.videoDetails.videoId;
-            if ( typeof(ytplayer_videoid) === "string" && cur_tab && cur_tab.url && cur_tab.url.includes( ytplayer_videoid ) )
-            {
-                //console.log("ytpleyr 与 url 一致");
-            }else
-                show_refresh();
+                
+                var ytplayer_videoid = playerResponse && playerResponse.videoDetails && playerResponse.videoDetails.videoId;
+                if ( typeof(ytplayer_videoid) === "string" && cur_tab && cur_tab.url && cur_tab.url.includes( ytplayer_videoid ) )
+                {
+                    //console.log("ytpleyr 与 url 一致");
+                }else
+                    show_refresh();
 
-            parse_ytplayer();
-        
+                parse_ytplayer();
+            } catch (err) {
+                console.error('Failed to parse playerResponse_json', err);
+                show_refresh();
+                return;
+            }
+        }
     });
     
-    // NOW trigger content script to send player response
+    // Request player info from content script
     try {
         await chrome.tabs.sendMessage(cur_tab.id, { action: "get_player_info" });
     } catch (err) {
         console.log("Could not send message to tab:", err);
+        const divMsg = document.getElementById('div_message');
+        if (divMsg) {
+            divMsg.textContent = 'Could not connect to page script. Make sure you are on a YouTube watch page and reload the page.';
+            divMsg.style.color = 'red';
+        }
     }
     
 });

@@ -23,8 +23,8 @@ function first_run() {
         
         // Handle request for player info from popup
         if (message.action === "get_player_info") {
-            send_ytplayer();
-            return;
+            await send_ytplayer();
+            return true;  // Indicate we'll send async response
         }
         
         if ( message.action == "display_sub" )
@@ -50,6 +50,7 @@ function first_run() {
             //subt.srclang = "en";
             video.appendChild(subt);
             subt.track.mode = "showing";
+            return true;
             
             /*
             var st = document.createElement("style");
@@ -66,6 +67,7 @@ function first_run() {
         } else if (message.action == "remove_subs")
         {
             remove_subs();
+            return true;
         }
         
     });

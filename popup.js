@@ -25,25 +25,16 @@ var captionTracks;
 var translationLanguages;
 
 onrd.push(async function(){
-    cur_tab = ( await browser.tabs.query({
+    cur_tab = ( await chrome.tabs.query({
         currentWindow: true, active: true
     }) ) [0];
 
     //console.log (cur_tab.id, cur_tab.title );
     //document.getElementById("div_page_title").textContent = cur_tab.title;
     
-    browser.tabs.executeScript(cur_tab.id, {
-        code: `
-            // window.tabid=${cur_tab.id};
-        `,
-        runAt: "document_start"
-    }).then(function() {
-        browser.tabs.executeScript(cur_tab.id, {
-            file: 'inject.js'
-        }) ;
-    });
+    // Content script is already injected via manifest.json, no need to execute it manually
     
-    browser.runtime.onMessage.addListener(async function(message, sender) { 
+    chrome.runtime.onMessage.addListener(async function(message, sender) { 
         // 
         // console.log("popup receive message", message, sender);
         // console.log(message);
@@ -145,7 +136,7 @@ function parse_ytplayer()
 onrd.push( function() {
     document.getElementById("btn_disp_sub").onclick = function() {
 
-        browser.tabs.sendMessage(cur_tab.id, {
+        chrome.tabs.sendMessage(cur_tab.id, {
             action: "display_sub",
             url: get_subtitle_url(),
             kill_left: true
@@ -168,7 +159,7 @@ onrd.push( function() {
 
 onrd.push( function() {
     document.getElementById("btn_rm_sub").onclick = function() {
-        browser.tabs.sendMessage(cur_tab.id, {
+        chrome.tabs.sendMessage(cur_tab.id, {
             action: "remove_subs",
         });
     };

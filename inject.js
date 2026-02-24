@@ -18,7 +18,7 @@ if ( ! window.has_executed )
 }
 
 function first_run() {
-    browser.runtime.onMessage.addListener( async function(message, sender) { 
+    chrome.runtime.onMessage.addListener( async function(message, sender, sendResponse) { 
         //console.log(message, sender);
         if ( message.action == "display_sub" )
         {

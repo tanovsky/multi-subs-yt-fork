@@ -103,7 +103,6 @@ onrd.push(async function(){
                 show_refresh();
 
             parse_ytplayer();
-        }
         
     });
     

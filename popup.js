@@ -24,6 +24,23 @@ var playerResponse;
 var captionTracks;
 var translationLanguages;
 
+// Safely send a message to a tab and return true on success.
+async function safeSendMessage(tabId, message) {
+    try {
+        const res = await chrome.tabs.sendMessage(tabId, message);
+        return true;
+    } catch (err) {
+        // In MV3, sendMessage will throw if receiving end doesn't exist.
+        console.warn('safeSendMessage failed:', err);
+        const divMsg = document.getElementById('div_message');
+        if (divMsg) {
+            divMsg.textContent = 'Could not connect to page script. Make sure you are on a YouTube watch page and reload the page.';
+            divMsg.style.color = 'red';
+        }
+        return false;
+    }
+}
+
 onrd.push(async function(){
     cur_tab = ( await chrome.tabs.query({
         currentWindow: true, active: true
@@ -45,17 +62,25 @@ onrd.push(async function(){
         // console.log("popup receive message", message, sender);
         // console.log(message);
         
-        if (sender.tab.id == cur_tab.id) 
-        {
-            
-            playerResponse = null;
+        if (!sender || !sender.tab || sender.tab.id !== cur_tab.id) {
+            return;
+        }
+
+        playerResponse = null;
             //console.log("tab id matches");
             //document.getElementById("div_page_title").textContent = message['title'];
             //ytplayer = JSON.parse(message['ytplayer_json']);
-            try {
-                playerResponse = JSON.parse(message['playerResponse_json']);
-            }catch (err) {
+            if (message && message.playerResponse_json) {
+                try {
+                    playerResponse = JSON.parse(message.playerResponse_json);
+                } catch (err) {
+                    console.error('Failed to parse playerResponse_json', err);
+                    show_refresh();
+                    return;
+                }
+            } else {
                 show_refresh();
+                return;
             }
             
             document.getElementById("div_connecting_tip").style.display="none";
@@ -70,8 +95,8 @@ onrd.push(async function(){
             
             //const player_response = ytplayer.config.args.raw_player_response;
             
-            var ytplayer_videoid = playerResponse.videoDetails.videoId;
-            if ( typeof(ytplayer_videoid) === "string" && cur_tab.url.includes( ytplayer_videoid ) )
+            var ytplayer_videoid = playerResponse && playerResponse.videoDetails && playerResponse.videoDetails.videoId;
+            if ( typeof(ytplayer_videoid) === "string" && cur_tab && cur_tab.url && cur_tab.url.includes( ytplayer_videoid ) )
             {
                 //console.log("ytpleyr 与 url 一致");
             }else
@@ -92,15 +117,10 @@ function parse_ytplayer()
 {
     //const player_response = ytplayer.config.args.raw_player_response;
     
-    if (playerResponse.captions) {
-        captionTracks = playerResponse.captions.playerCaptionsTracklistRenderer.captionTracks;
-        translationLanguages = playerResponse.captions.playerCaptionsTracklistRenderer.translationLanguages;
-    }else{
-        captionTracks = [];
-        translationLanguages = [];
-    }
+    captionTracks = (playerResponse && playerResponse.captions && playerResponse.captions.playerCaptionsTracklistRenderer && playerResponse.captions.playerCaptionsTracklistRenderer.captionTracks) || [];
+    translationLanguages = (playerResponse && playerResponse.captions && playerResponse.captions.playerCaptionsTracklistRenderer && playerResponse.captions.playerCaptionsTracklistRenderer.translationLanguages) || [];
     
-    document.getElementById("div_page_title").textContent = playerResponse.videoDetails.title;
+    document.getElementById("div_page_title").textContent = (playerResponse && playerResponse.videoDetails && playerResponse.videoDetails.title) ? playerResponse.videoDetails.title : '';
     
     //console.log(captionTracks);
     const selector_sub_lang = document.getElementById("selector-sub-lang");
@@ -109,7 +129,7 @@ function parse_ytplayer()
         var option = document.createElement("option");
         option.setAttribute("value", i);
         
-        var text = c.name.simpleText;
+        var text = (c && c.name && c.name.simpleText) ? c.name.simpleText : (c && c.vssId) ? c.vssId : ('track ' + i);
     
         //if (c.isTranslatable)
         //    text += " (Translatable)";
@@ -118,8 +138,10 @@ function parse_ytplayer()
         
         selector_sub_lang.appendChild(option);
         
-        if (await getStor("orig_sub_lang") == c.vssId)
-            selector_sub_lang.value = i;
+        try {
+            if (await getStor("orig_sub_lang") == c.vssId)
+                selector_sub_lang.value = i;
+        } catch (e) {}
     });
     
     //console.log(translationLanguages);
@@ -128,23 +150,28 @@ function parse_ytplayer()
         var option = document.createElement("option");
         option.setAttribute("value", i);
         
-        var text = c.languageName.simpleText;
+        var text = (c && c.languageName && c.languageName.simpleText) ? c.languageName.simpleText : (c && c.languageCode) ? c.languageCode : ('lang ' + i);
         
         option.textContent = text;
         
         selector_trans_lang.appendChild(option);
         
-        if (await getStor("tran_sub_lang") == c.languageCode)
-            selector_trans_lang.value = i;
+        try {
+            if (await getStor("tran_sub_lang") == c.languageCode)
+                selector_trans_lang.value = i;
+        } catch (e) {}
     });
 }
 
 onrd.push( function() {
-    document.getElementById("btn_disp_sub").onclick = function() {
+    document.getElementById("btn_disp_sub").onclick = async function() {
 
-        chrome.tabs.sendMessage(cur_tab.id, {
+        var url = get_subtitle_url();
+        if (!url) return;
+
+        await safeSendMessage(cur_tab.id, {
             action: "display_sub",
-            url: get_subtitle_url(),
+            url: url,
             kill_left: true
         });
         
@@ -152,20 +179,26 @@ onrd.push( function() {
         const cbox_trans = document.getElementById("cbox_trans");
         const selector_trans_lang = document.getElementById("selector-trans-lang");
         
-        var orig_vssid = captionTracks[selector_sub_lang.value].vssId;
-        setStor("orig_sub_lang", orig_vssid);
+        var idx = selector_sub_lang.value;
+        if (captionTracks && captionTracks[idx] && captionTracks[idx].vssId) {
+            var orig_vssid = captionTracks[idx].vssId;
+            setStor("orig_sub_lang", orig_vssid);
+        }
         //console.log(getStor('orig_sub_lang'));
         
         if ( cbox_trans.checked) {
-            var tran_lang = translationLanguages[selector_trans_lang.value].languageCode;
-            setStor("tran_sub_lang", tran_lang);
+            var tidx = selector_trans_lang.value;
+            if (translationLanguages && translationLanguages[tidx] && translationLanguages[tidx].languageCode) {
+                var tran_lang = translationLanguages[tidx].languageCode;
+                setStor("tran_sub_lang", tran_lang);
+            }
         }
     };
 });
 
 onrd.push( function() {
-    document.getElementById("btn_rm_sub").onclick = function() {
-        chrome.tabs.sendMessage(cur_tab.id, {
+    document.getElementById("btn_rm_sub").onclick = async function() {
+        await safeSendMessage(cur_tab.id, {
             action: "remove_subs",
         });
     };
@@ -174,7 +207,7 @@ onrd.push( function() {
 onrd.push( function() {
     document.getElementById("btn_url").onclick = function() {
         var url = get_subtitle_url();
-        
+        if (!url) return;
         navigator.clipboard.writeText(url);
     };
 });
@@ -195,12 +228,18 @@ function get_subtitle_url(){
     const cbox_trans = document.getElementById("cbox_trans");
     const selector_trans_lang = document.getElementById("selector-trans-lang");
     
-    var url = captionTracks[selector_sub_lang.value].baseUrl + "&fmt=vtt";
-    
+    var idx = selector_sub_lang.value;
+    if (!(captionTracks && captionTracks[idx] && captionTracks[idx].baseUrl)) return null;
+
+    var url = captionTracks[idx].baseUrl + "&fmt=vtt";
+
     if (cbox_trans.checked)
     {
-        var trans_to_lang_code = translationLanguages[selector_trans_lang.value].languageCode;
-        url += `&tlang=${trans_to_lang_code}`;
+        var tidx = selector_trans_lang.value;
+        if (translationLanguages && translationLanguages[tidx] && translationLanguages[tidx].languageCode) {
+            var trans_to_lang_code = translationLanguages[tidx].languageCode;
+            url += `&tlang=${trans_to_lang_code}`;
+        }
     }
     return url;
 }

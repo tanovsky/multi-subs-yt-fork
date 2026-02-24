@@ -4,10 +4,6 @@
     "manifest_version": 3,
     "version": "0.9.5",
     "homepage_url": "https://garywill.github.io",
-    "developer": {
-        "name": "Garywill",
-        "url": "https://github.com/garywill/multi-subs-yt"
-    },
     "permissions": [
         "storage"
     ],
